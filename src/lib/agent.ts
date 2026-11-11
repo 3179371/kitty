@@ -364,7 +364,6 @@ async function runClaude(k: Kitty, e: AgentEvent) {
     prompt: eventPrompt(k, e),
     tools: tools(k),
     maxSteps: 8,
-    temperature: 0.6,
     abortSignal: AbortSignal.timeout(75_000),
   });
   const calls = res.steps.flatMap((s) => s.toolCalls.map((c) => c.toolName));
