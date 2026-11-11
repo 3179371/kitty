@@ -142,7 +142,7 @@ export function eventPrompt(k: Kitty, e: AgentEvent): string {
     case "participant_message":
       return head + `${participantName(k, e.participantId)} (id ${e.participantId}) wrote in the group: "${e.text}". Decide whether to act. If they say they can only give a different amount, call propose_share_change with their id and the new amount in USD. If they're asking something, answer briefly in the group. Birthday wishes or chit-chat don't need a reply (never reply to every message).`;
     case "organizer_command":
-      return head + `${organizer(k).name} wrote to you privately: "${e.text}". Help them using your tools (add people, check status, remind, search gifts, request a purchase approval...). Always finish with reply_to_organizer.`;
+      return head + `${organizer(k).name} wrote to you privately: "${e.text}". Help them using your tools (add people, check status, remind, search gifts, request a purchase approval...). If they ask to buy or pay for anything, ALWAYS call request_purchase_approval with what they asked for (title, price_usd, merchant), even if you expect it to fail: the policy engine decides and logs it, you never refuse on your own. If it answers BLOCKED, say which checks failed. Always finish with reply_to_organizer, in at most two short sentences.`;
     case "decision_resolved": {
       const a = k.approvals.find((x) => x.id === e.approvalId);
       return head + `${organizer(k).name} decided: "${a?.result}" for "${a?.title}". Tell the group in one short message.`;
