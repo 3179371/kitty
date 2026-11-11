@@ -1,0 +1,71 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { generateObject } from "ai";
+import { z } from "zod";
+import { aiMode, config } from "./config";
+import type { KittyDraft } from "./types";
+
+export function model() {
+  const anthropic = createAnthropic({ apiKey: config.anthropicKey });
+  return anthropic(config.anthropicModel);
+}
+
+const draftSchema = z.object({
+  recipient: z.string().describe("First name of the person the gift is for"),
+  occasion: z.string().describe("Short occasion label, e.g. 'Birthday', 'Farewell', 'New baby'"),
+  eventDate: z.string().describe("Date of the occasion, YYYY-MM-DD, resolved relative to today"),
+  sharePerPerson: z.number().describe("Amount each participant chips in, in US dollars"),
+  participants: z
+    .array(z.object({ name: z.string(), isOrganizer: z.boolean().optional() }))
+    .describe("Everyone who chips in. Include the organizer if they said 'me', 'us' or 'we'. If only a count is given, invent realistic, diverse first names."),
+  interests: z.array(z.string()).describe("What the recipient likes, 1-4 short lowercase keywords"),
+});
+
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const FALLBACK_NAMES = ["Mia", "Karim", "Jonas", "Priya", "Tom", "Ana", "Leo", "Sofia", "Omar", "Chloe", "Ben", "Yuki"];
+
+export async function parseSentence(sentence: string, organizerName: string, today: Date): Promise<{ draft: KittyDraft; via: "claude" | "offline" }> {
+  if (aiMode() === "claude") {
+    try {
+      const { object } = await generateObject({
+        model: model(),
+        schema: draftSchema,
+        system:
+          "You turn one sentence from a group-gift organizer into a structured kitty. Be precise with numbers and dates. Never invent an amount: if none is given, use 20.",
+        prompt: `Today is ${today.toDateString()} (${today.toISOString().slice(0, 10)}). The organizer's name is ${organizerName}.\nSentence: "${sentence}"`,
+      });
+      const parts = object.participants.map((p) => ({ name: p.name.trim(), isOrganizer: !!p.isOrganizer || p.name.trim().toLowerCase() === organizerName.toLowerCase() }));
+      return { draft: { ...object, organizerName, participants: parts }, via: "claude" };
+    } catch (e) {
+      console.error("[kitty] Claude parse failed, using offline parser", e);
+    }
+  }
+  return { draft: offlineParse(sentence, organizerName, today), via: "offline" };
+}
+
+function offlineParse(s: string, organizerName: string, today: Date): KittyDraft {
+  const lower = s.toLowerCase();
+  const recipient = (s.match(/\bfor\s+([A-Z][a-zA-Z'-]+)/) || [])[1] || "our friend";
+  const amount = parseFloat((s.match(/[$€£]\s?(\d+(?:\.\d+)?)/) || s.match(/(\d+(?:\.\d+)?)\s?(?:\$|€|dollars|euros|each)/i) || [])[1] || "20");
+  const count = parseInt((lower.match(/(\d+)\s+(?:colleagues|friends|people|coworkers|teammates|others)/) || [])[1] || "5", 10);
+  const includesMe = /\b(me and|with me|us|we)\b/.test(lower);
+  const interestText = (lower.match(/(?:loves?|likes?|into|enjoys?)\s+([^,.;]+)/) || [])[1] || "";
+  const interests = interestText.split(/\s+and\s+|,|\s+&\s+/).map((x) => x.trim()).filter(Boolean).slice(0, 4);
+  let date = new Date(today);
+  const wd = WEEKDAYS.findIndex((d) => lower.includes(d));
+  if (wd >= 0) {
+    const diff = (wd - today.getDay() + 7) % 7 || 7;
+    date = new Date(today.getTime() + diff * 86400000);
+  } else date = new Date(today.getTime() + 10 * 86400000);
+  const occasion = /farewell|leaving|goodbye/.test(lower) ? "Farewell" : /baby/.test(lower) ? "New baby" : /wedding/.test(lower) ? "Wedding" : "Birthday";
+  const listed = ((s.match(/\b(?:from|with)\s+((?:me|us)?[,\s]*(?:[A-Z][a-zA-Z'-]+(?:,\s*|\s+and\s+|\s*&\s*)?)+)/) || [])[1] || "")
+    .split(/,|\band\b|&/)
+    .map((x) => x.trim())
+    .filter((x) => /^[A-Z][a-zA-Z'-]+$/.test(x) && x !== recipient && !/^(Me|Us|She|He|They)$/.test(x));
+  if (listed.length) {
+    const participants = [{ name: organizerName, isOrganizer: true }, ...listed.map((name) => ({ name }))];
+    return { recipient, occasion, eventDate: date.toISOString().slice(0, 10), sharePerPerson: amount, organizerName, participants, interests: interests.length ? interests : ["surprises"] };
+  }
+  const names = FALLBACK_NAMES.filter((n) => n.toLowerCase() !== recipient.toLowerCase() && n.toLowerCase() !== organizerName.toLowerCase()).slice(0, includesMe ? Math.max(1, count) : count);
+  const participants = [{ name: organizerName, isOrganizer: true }, ...names.map((name) => ({ name }))];
+  return { recipient, occasion, eventDate: date.toISOString().slice(0, 10), sharePerPerson: amount, organizerName, participants, interests: interests.length ? interests : ["surprises"] };
+}

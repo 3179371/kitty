@@ -1,0 +1,132 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/figtree";
+
+@theme {
+  --color-paper: #f3f5f9;
+  --color-card: #ffffff;
+  --color-ink: #172033;
+  --color-ink-2: #4a5468;
+  --color-ink-3: #7b8498;
+  --color-line: #dde2ec;
+  --color-berry: #c8326b;
+  --color-berry-deep: #a3224f;
+  --color-berry-soft: #fbe7ef;
+  --color-mint: #17805f;
+  --color-mint-soft: #ddf3ea;
+  --color-sun: #f2b632;
+  --color-sun-soft: #fff4d6;
+  --color-danger: #b42318;
+  --color-danger-soft: #fde8e6;
+  --color-sky: #2563a8;
+  --color-sky-soft: #e3eefa;
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-berry);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Gift-tag hero card */
+.tag-card {
+  position: relative;
+  background: #fff;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 22px 22px 22px 22px;
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+.tag-card::before {
+  content: "";
+  position: absolute;
+  top: 26px;
+  left: 26px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-ink);
+  background: var(--color-paper);
+}
+
+/* Approval ticket */
+.ticket {
+  background: var(--color-sun-soft);
+  border: 1.5px solid #e4b23f;
+  border-radius: 16px;
+  position: relative;
+}
+.ticket-perf {
+  border-top: 2px dashed #e4b23f;
+  margin: 12px -16px;
+}
+
+.typing span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 1.5px;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: blink 1.2s infinite;
+}
+.typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes blink {
+  50% {
+    opacity: 1;
+  }
+}
+
+.ribbon-track {
+  background: repeating-linear-gradient(
+    -45deg,
+    #eef1f6,
+    #eef1f6 6px,
+    #e5e9f1 6px,
+    #e5e9f1 12px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* AG Grid cell helpers */
+.ag-cell-wrap-text {
+  line-height: 1.35 !important;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}

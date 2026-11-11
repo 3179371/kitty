@@ -1,0 +1,28 @@
+# One-click deploy on Render: New > Blueprint > pick this repo.
+services:
+  - type: web
+    name: kitty
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PAYPAL_API_BASE
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: GIFT_SHOP_EMAIL
+        sync: false
+      - key: SANDBOX_BUYER_EMAIL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5
+      - key: CHANNEL3_API_KEY
+        sync: false
