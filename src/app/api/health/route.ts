@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateText } from "ai";
-import { model } from "@/lib/ai";
+import { lastParseError, model, parseSentence } from "@/lib/ai";
 import { aiMode, config, giftSource, paypalMode } from "@/lib/config";
 import { searchGifts } from "@/lib/gifts";
 import { createOrder, healthCheck, runToolkit } from "@/lib/paypal";
@@ -34,6 +34,11 @@ export async function GET(req: Request) {
       orders: paypalMode() === "sandbox" ? await probe(async () => (await createOrder({ amount: 100, description: "Kitty health check", customId: "health", referenceId: "health", brand: "Kitty" })).id) : "mock",
       invoicing_agent_toolkit: paypalMode() === "sandbox" ? await probe(async () => `total_items=${(await runToolkit("list_invoices", { page: 1, page_size: 1 }))?.total_items ?? "?"}`) : "mock",
       claude: aiMode() === "claude" ? await probe(async () => (await generateText({ model: model(), prompt: "Reply with the single word OK.", maxTokens: 5 })).text) : "offline",
+      sentence_parsing: await probe(async () => {
+        const r = await parseSentence("Birthday kitty for Sarah next Saturday: $20 each from me, Mia and Tom. She loves hiking.", "Lina", new Date());
+        if (r.via !== "claude" && aiMode() === "claude") throw new Error(`fell back to offline parser: ${lastParseError}`);
+        return `${r.via}: ${r.draft.participants.length} people, $${r.draft.sharePerPerson}`;
+      }),
       gifts: await probe(async () => {
         const r = await searchGifts("hiking backpack", 15000, ["hiking"]);
         return `${giftSource()}: ${r.length} results, first=${r[0]?.title} (${r[0]?.source})`;

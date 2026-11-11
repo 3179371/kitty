@@ -1,5 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { generateObject } from "ai";
+import { generateText, tool } from "ai";
 import { z } from "zod";
 import { aiMode, config } from "./config";
 import type { KittyDraft } from "./types";
@@ -38,23 +38,44 @@ const draftSchema = z.object({
   interests: z.array(z.string()).describe("What the recipient likes, 1-4 short lowercase keywords"),
 });
 
+/** Last structured-output error, exposed by /api/health for diagnosis. */
+export let lastParseError = "";
+
 const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 const FALLBACK_NAMES = ["Mia", "Karim", "Jonas", "Priya", "Tom", "Ana", "Leo", "Sofia", "Omar", "Chloe", "Ben", "Yuki"];
 
 export async function parseSentence(sentence: string, organizerName: string, today: Date): Promise<{ draft: KittyDraft; via: "claude" | "offline" }> {
   if (aiMode() === "claude") {
-    try {
-      const { object } = await generateObject({
-        model: model(),
-        schema: draftSchema,
-        system:
-          "You turn one sentence from a group-gift organizer into a structured kitty. Be precise with numbers and dates. Never invent an amount: if none is given, use 20.",
-        prompt: `Today is ${today.toDateString()} (${today.toISOString().slice(0, 10)}). The organizer's name is ${organizerName}.\nSentence: "${sentence}"`,
-      });
-      const parts = object.participants.map((p) => ({ name: p.name.trim(), isOrganizer: !!p.isOrganizer || p.name.trim().toLowerCase() === organizerName.toLowerCase() }));
-      return { draft: { ...object, organizerName, participants: parts }, via: "claude" };
-    } catch (e) {
-      console.error("[kitty] Claude parse failed, using offline parser", e);
+    // Tool calling (not forced) is the most widely supported way to get structured output from Claude.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        let captured: z.infer<typeof draftSchema> | null = null;
+        await generateText({
+          model: model(),
+          system:
+            "You turn one sentence from a group-gift organizer into a structured kitty by calling the create_kitty tool exactly once. Be precise with numbers and dates. Never invent an amount: if none is given, use 20.",
+          prompt: `Today is ${today.toDateString()} (${today.toISOString().slice(0, 10)}). The organizer's name is ${organizerName}.\nSentence: "${sentence}"`,
+          tools: {
+            create_kitty: tool({
+              description: "Create the kitty from the organizer's sentence.",
+              parameters: draftSchema,
+              execute: async (args) => {
+                captured = args;
+                return "created";
+              },
+            }),
+          },
+          maxSteps: 1,
+          abortSignal: AbortSignal.timeout(30_000),
+        });
+        const object = captured as z.infer<typeof draftSchema> | null;
+        if (!object) throw new Error("Claude did not call create_kitty");
+        const parts = object.participants.map((p) => ({ name: p.name.trim(), isOrganizer: !!p.isOrganizer || p.name.trim().toLowerCase() === organizerName.toLowerCase() }));
+        return { draft: { ...object, organizerName, participants: parts }, via: "claude" };
+      } catch (e) {
+        lastParseError = (e as Error).message;
+        console.error("[kitty] Claude parse failed", e);
+      }
     }
   }
   return { draft: offlineParse(sentence, organizerName, today), via: "offline" };
