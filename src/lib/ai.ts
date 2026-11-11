@@ -5,7 +5,25 @@ import { aiMode, config } from "./config";
 import type { KittyDraft } from "./types";
 
 export function model() {
-  const anthropic = createAnthropic({ apiKey: config.anthropicKey });
+  // AI SDK v4 always sends `temperature` (default 0), which newer Claude models reject.
+  // Strip it from the request body before it reaches the API.
+  const anthropic = createAnthropic({
+    apiKey: config.anthropicKey,
+    fetch: async (url, init) => {
+      if (init && typeof init.body === "string") {
+        try {
+          const body = JSON.parse(init.body);
+          if (body && typeof body === "object" && "temperature" in body) {
+            delete body.temperature;
+            init = { ...init, body: JSON.stringify(body) };
+          }
+        } catch {
+          // not JSON: send as is
+        }
+      }
+      return fetch(url, init);
+    },
+  });
   return anthropic(config.anthropicModel);
 }
 
