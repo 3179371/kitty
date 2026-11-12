@@ -135,7 +135,7 @@ function Console({ k, act }: { k: KittyView; act: (b: Record<string, unknown>) =
         </div>
       )}
 
-      <div className="mx-auto grid max-w-[1500px] gap-5 px-5 pt-5 xl:grid-cols-[320px_minmax(0,1fr)_390px]">
+      <div className="mx-auto grid max-w-[1500px] grid-cols-[minmax(0,1fr)] gap-5 px-5 pt-5 xl:grid-cols-[320px_minmax(0,1fr)_390px]">
         <div className="space-y-4">
           <Progress k={k} />
           <Approvals k={k} act={act} />
