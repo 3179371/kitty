@@ -2,7 +2,7 @@
 
 **Type one sentence. Kitty does the rest.** It collects everyone's share with PayPal, chases the late payers (a friendly nudge, then a real PayPal invoice), finds a real gift within budget, lets the group vote, pays for it **only after the organizer approves**, refunds whatever is left pro rata and signs the card. The organizer's job shrinks to one sentence and one click.
 
-- **Live demo:** `https://<your-render-app>.onrender.com` (PayPal sandbox, no real money)
+- **Live demo:** [kitty-odg5.onrender.com](https://kitty-odg5.onrender.com) (PayPal sandbox, no real money)
 - **Video (under 3 min):** `https://youtu.be/<video-id>`
 - Built for the PayPal AI Hackathon 2026 · License: MIT
 
@@ -81,7 +81,7 @@ flowchart LR
 
 ## Try it (judges)
 
-1. Open the live demo and click **Create the kitty** (the example sentence is pre-filled).
+1. Open the [live demo](https://kitty-odg5.onrender.com) and click **Create the kitty** (the example sentence is pre-filled).
 2. In the phone on the right, tap **Pay $20** on a link and pay with a **PayPal sandbox personal account** (see credentials below, or use any sandbox buyer account you own). The ledger updates live.
 3. Click **Skip a day** (top right) twice: Kitty nudges the late payers, then sends real PayPal sandbox invoices.
 4. Chat as Priya with the quick reply *"Sorry, I can only do $10"*. Kitty asks the organizer what to do; pick **Lower the goal**.
@@ -91,7 +91,7 @@ flowchart LR
 
 **Sandbox buyer for testing:** the PayPal sandbox personal account credentials are in the Devpost submission's testing instructions (sandbox test account, no real money). Any sandbox personal account you own works too.
 
-`/api/health?deep=1` shows the live status of PayPal Orders, Invoicing (Agent Toolkit), Claude and the gift search.
+[`/api/health?deep=1`](https://kitty-odg5.onrender.com/api/health?deep=1) shows the live status of PayPal Orders, Invoicing (Agent Toolkit), Claude and the gift search.
 
 > The demo server keeps data in memory and resets on restart. On Render's free plan the first request after a while can take ~50 s to wake up.
 
