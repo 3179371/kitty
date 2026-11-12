@@ -3,7 +3,7 @@ services:
   - type: web
     name: kitty
     runtime: node
-    plan: free
+    plan: starter
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /

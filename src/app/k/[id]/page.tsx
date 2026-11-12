@@ -172,7 +172,9 @@ function Console({ k, act }: { k: KittyView; act: (b: Record<string, unknown>) =
 
         <div>
           <GroupChat k={k} act={act} />
-          <p className="mx-auto mt-3 max-w-[390px] text-center text-xs text-ink-3">The group chat everyone sees. Switch who you&apos;re chatting as to play each colleague.</p>
+          <p className="mx-auto mt-3 max-w-[390px] text-center text-xs leading-relaxed text-ink-3">
+            <span className="font-semibold text-ink-2">Your group chat.</span> Kitty joins the chat your group already uses. Here it&apos;s simulated, so you can play every member: pick who you chat as above.
+          </p>
         </div>
       </div>
     </main>
