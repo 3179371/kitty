@@ -3,7 +3,7 @@
 **Type one sentence. Kitty does the rest.** It collects everyone's share with PayPal, chases the late payers (a friendly nudge, then a real PayPal invoice), finds a real gift within budget, lets the group vote, pays for it **only after the organizer approves**, refunds whatever is left pro rata and signs the card. The organizer's job shrinks to one sentence and one click.
 
 - **Live demo:** [kitty-odg5.onrender.com](https://kitty-odg5.onrender.com) (PayPal sandbox, no real money)
-- **Video (under 3 min):** `https://youtu.be/<video-id>`
+- **Video (under 3 min):** `https://youtu.be/L6O0zb5PQxk`
 - Built for the PayPal AI Hackathon 2026 · License: MIT
 
 ---
